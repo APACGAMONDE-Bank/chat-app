@@ -1,0 +1,47 @@
+
+/* Custom */
+.modal-vertical-center {
+    margin-top: 20%;
+}
+
+#chat-messages, #chat-users {
+    height: 400px;
+    overflow-y: auto;
+    list-style-type: none;
+}
+
+.messages li {
+    
+}
+
+.message {
+    display: inline-block;
+    max-width: 90%;
+}
+
+.message-time {
+    display: inline-block;
+    width: 65px;
+}
+
+/* Overrides */
+#chat-modal .modal-footer .alert {
+    margin: 0;
+}
+
+#chat-message-form .form-group {
+    margin: 0;
+}
+
+/* elements that are hidden initially */
+.modal-footer {
+    display: none;
+}
+
+#settings-menu {
+    display: none;
+}
+
+#chat-modal-form .has-feedback .glyphicon {
+    display: none;
+}
