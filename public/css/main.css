@@ -8,10 +8,13 @@
     height: 400px;
     overflow-y: auto;
     list-style-type: none;
+    margin: 0;
 }
 
-.messages li {
-    
+#user-typing {
+    min-height: 20px;
+    margin-top: 5px;
+    font-style: italic;
 }
 
 .message {
@@ -31,6 +34,10 @@
 
 #chat-message-form .form-group {
     margin: 0;
+}
+
+#chat-window .panel-body {
+    padding-bottom: 5px;
 }
 
 /* elements that are hidden initially */

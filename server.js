@@ -14,9 +14,11 @@ var users = {};
 
 // TODO:
 // Add avatars (Gravatar?)
-// Add {user} is typing functionality
+// Add {user} is typing functionality for multiple users
 // Add private messaging
+// Add multiple chat rooms
 // Better handle page refreshes and reconnections
+// Set up mongoDB
 
 app.use(log4js.connectLogger(logger, { level: 'auto' }));
 app.use(express.static(__dirname + '/public'));
@@ -74,6 +76,14 @@ socket.on('connection', function(client) {
         var time = moment().format('h:mm a');
         socket.sockets.emit('new-message', users[client.id]['name'], msg, time);
         logger.debug(users[client.id]['name'] + " said " + msg + " at " + time);
+    });
+    
+    client.on('typing-message', function() {
+        client.broadcast.emit('user-typing', users[client.id]['name']);
+    });
+    
+    client.on('typing-message:done', function() {
+        client.broadcast.emit('user-typing:done');
     });
     
     client.on('disconnect', function() {

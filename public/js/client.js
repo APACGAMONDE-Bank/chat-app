@@ -1,13 +1,18 @@
 $(document).ready(function() {
     var client = io();
-
+    
+    var TYPING_TIMEOUT = 5000;
+    
+    var is_typing = false,
+        typing_timeout;
+    
     // disable chat until user joins
     $('#chat-message-form fieldset').prop('disabled', true);
     
     $('#chat-modal').on('shown.bs.modal', function () {
         $('#chat-modal-input').focus();
     });
-
+    
     $('#chat-modal-form').submit(function(event) {
         var username = $('#chat-modal-input').val();
 
@@ -23,10 +28,23 @@ $(document).ready(function() {
 
         if (msg != '') {
             client.emit('send-message', msg);
+            finish_typing_message();
             $('#chat-message-input').val('');
         }
         // prevent page from reloading due to form submit
         event.preventDefault();
+    });
+    
+    // check if user is typing a message
+    $('#chat-message-input').keypress(function() {
+        if (!is_typing) {
+            is_typeing = true;
+            client.emit('typing-message');
+            typing_timeout = setTimeout(finish_typing_message, TYPING_TIMEOUT);
+        } else {
+            clearTimeout(typing_timeout);
+            typing_timeout = setTimeout(finish_typing_message, TYPING_TIMEOUT);
+        }
     });
     
     $('#change-name-btn').click(function() {
@@ -79,7 +97,7 @@ $(document).ready(function() {
     });
 
     client.on('update-message', function(msg) {
-        $('#chat-messages').append($('<li><p><cite>' + msg + '</cite></p></li>'));
+        $('#chat-messages').append($('<li><cite>' + msg + '</cite></li>'));
     });
     
     client.on('new-message', function(username, msg, time) {
@@ -115,6 +133,14 @@ $(document).ready(function() {
         messageList.scrollTop(messageList.prop("scrollHeight"));
     });
     
+    client.on('user-typing', function(username) {
+        $('#user-typing small').text(username + ' is typing...');
+    });
+    
+    client.on('user-typing:done', function() {
+        $('#user-typing small').text('');
+    });
+    
     function toggle_chat() {
         var chatForm = $('#chat-message-form fieldset');
         if (chatForm.prop('disabled')) {
@@ -143,4 +169,8 @@ $(document).ready(function() {
         $('#chat-modal-error').text('');
     }
 
+    function finish_typing_message() {
+        is_typing = false;
+        client.emit('typing-message:done');
+    }
 });
