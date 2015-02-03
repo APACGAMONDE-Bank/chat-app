@@ -38,7 +38,7 @@ $(document).ready(function() {
     // check if user is typing a message
     $('#chat-message-input').keypress(function() {
         if (!is_typing) {
-            is_typeing = true;
+            is_typing = true;
             client.emit('typing-message');
             typing_timeout = setTimeout(finish_typing_message, TYPING_TIMEOUT);
         } else {

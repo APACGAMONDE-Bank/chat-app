@@ -1,15 +1,25 @@
+'use strict';
+
+// Vendor packages
 var express = require('express');
-var app = express();
-var http = require('http').Server(app);
+var http = require('http');
 var io = require('socket.io');
-var socket = io(http);
 var moment = require('moment');
 var log4js = require('log4js');
+
+// Configuration
 var config = require('./config');
 
+// Setup logging
 log4js.configure(config.LOG4JS_CONFIG, {});
 var logger = log4js.getLogger('dev');
 
+// Setup server
+var app = express();
+var server = http.Server(app);
+var socket = io(server);
+
+// Globals
 var users = {};
 
 // TODO:
@@ -19,6 +29,9 @@ var users = {};
 // Add multiple chat rooms
 // Better handle page refreshes and reconnections
 // Set up mongoDB
+// Refactor client.js to use ReactJS
+//  - browserify
+// Add grunt tasks
 
 app.use(log4js.connectLogger(logger, { level: 'auto' }));
 app.use(express.static(__dirname + '/public'));
@@ -26,7 +39,7 @@ app.get('/', function(req, res) {
     res.sendFile(__dirname + '/public/index.html');
 });
 
-http.listen(config.PORT, function() {
+server.listen(config.PORT, function() {
     logger.debug('starting chat server');
     logger.debug('listening on localhost:' + config.PORT);
 });
@@ -38,7 +51,7 @@ socket.on('connection', function(client) {
     client.on('join', function(username) {
         logger.debug(username + " requesting to join");
         
-        var update = users[client.id] !== undefined ? true : false
+        var update = users[client.id] !== undefined;
         var old_username = update ? users[client.id]['name'] : null;
         var error_msg = validate_username(client.id, username);
         
@@ -117,7 +130,9 @@ socket.on('connection', function(client) {
     function delete_user(clientId) {
         logger.debug("Deleting user " + JSON.stringify(users[clientId]));
         for (var key in users[clientId]) {
-            delete key;
+            if (users[clientId].hasOwnProperty(key)) {
+                delete users[clientId][key];
+            }
         }
         delete users[clientId];
     }
