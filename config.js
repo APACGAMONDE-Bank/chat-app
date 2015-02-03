@@ -13,7 +13,7 @@ config.LOG4JS_CONFIG = {
             }
         },
         { 
-            "category": "production", 
+            "category": "prod",
             "type": "file", 
             "filename": "logs/server.log", 
             "maxLogSize": 20480,
@@ -27,7 +27,7 @@ config.LOG4JS_CONFIG = {
     "levels": {
         "[all]": "INFO",
         "dev":  "DEBUG",
-        "production": "ERROR"
+        "prod": "ERROR"
     }
 };
 

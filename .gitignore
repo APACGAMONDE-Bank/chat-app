@@ -27,6 +27,11 @@ node_modules
 # Users Environment Variables
 .lock-wscript
 
+# Build and development directories
+build
+public
+dist
+
 # IDE
 .idea
 *.iml
