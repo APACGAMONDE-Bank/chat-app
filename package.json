@@ -6,7 +6,8 @@
     "express": "~4.10.2",
     "socket.io": "~1.3.2",
     "moment": "~2.9.0",
-    "log4js": "~0.6.22"
+    "log4js": "~0.6.22",
+    "react": "~0.12.2"
   },
   "devDependencies": {
     "grunt": "~0.4.5",
@@ -22,6 +23,7 @@
     "grunt-browserify": "~3.3.0",
     "grunt-nodemon": "~0.3.0",
     "time-grunt": "~1.0.0",
-    "load-grunt-tasks": "~3.1.0"
+    "load-grunt-tasks": "~3.1.0",
+    "reactify": "~1.0.0"
   }
 }

@@ -13,10 +13,23 @@ module.exports = function(grunt) {
             prod: ['dist/**/*']
         },
 
+        browserify: {
+            app: {
+                options: {
+                    transform: ['reactify'],
+                    extensions: ['.jsx']
+                },
+                files: [{
+                    src: ['client/js/client.js'],
+                    dest: 'build/app.js'
+                }]
+            }
+        },
+
         concat: {
             build: {
                 files: [{
-                    src: ['client/js/*'],
+                    src: ['build/app.js'],
                     dest: 'build/main.js'
                 }, {
                     src: ['client/css/*'],
@@ -34,7 +47,7 @@ module.exports = function(grunt) {
                 files: [{
                     expand: true,
                     cwd: 'build/',
-                    src: '*.js',
+                    src: 'main.js',
                     dest: 'dist/js/'
                 }]
             }
@@ -44,7 +57,7 @@ module.exports = function(grunt) {
             prod: {
                 expand: true,
                 cwd: 'build/',
-                src: '*.css',
+                src: 'main.css',
                 dest: 'dist/css/'
             }
         },
@@ -54,12 +67,12 @@ module.exports = function(grunt) {
                 files: [{
                     expand: true,
                     cwd: 'build/',
-                    src: '*.js',
+                    src: 'main.js',
                     dest: 'public/js/'
                 }, {
                     expand: true,
                     cwd: 'build/',
-                    src: '*.css',
+                    src: 'main.css',
                     dest: 'public/css/'
                 }, {
                     expand: true,
@@ -89,13 +102,17 @@ module.exports = function(grunt) {
         },
 
         jshint: {
-            all: ['client/js/*.js']
+            options: {
+                jshintrc: '.jshintrc',
+                ignores: ['client/js/client.js']
+            },
+            all: ['Gruntfile.js', 'server.js', 'client/js/*.js']
         },
 
         watch: {
             scripts: {
                 files: ['client/js/*.js', 'client/css/*.css'],
-                tasks: ['clean:build', 'clean:dev', 'concat:build', 'copy:dev']
+                tasks: ['build:dev']
             }
         },
 
@@ -131,7 +148,7 @@ module.exports = function(grunt) {
 
     });
 
-    grunt.registerTask('build:dev', ['clean:build', 'clean:dev', 'jshint:all', 'concat:build', 'copy:dev']);
+    grunt.registerTask('build:dev', ['clean:build', 'clean:dev', 'browserify:app', 'jshint:all', 'concat:build', 'copy:dev']);
     grunt.registerTask('build:prod', ['clean:build', 'clean:prod', 'concat:build', 'uglify:prod', 'cssmin:prod', 'copy:prod']);
 
     grunt.registerTask('server', ['build:dev', 'concurrent:dev']);

@@ -11,15 +11,19 @@
     margin: 0;
 }
 
-#user-typing {
+#users-typing {
     min-height: 20px;
     margin-top: 5px;
     font-style: italic;
 }
 
-.message {
+.message-username {
+    font-weight: bold;
+}
+
+.message-text {
     display: inline-block;
-    max-width: 90%;
+    max-width: 80%;
 }
 
 .message-time {
@@ -28,27 +32,14 @@
 }
 
 /* Overrides */
-#chat-modal .modal-footer .alert {
+#chat-box .panel-footer .form-group {
     margin: 0;
 }
 
-#chat-message-form .form-group {
-    margin: 0;
-}
-
-#chat-window .panel-body {
+#chat-box .panel-body {
     padding-bottom: 5px;
 }
 
-/* elements that are hidden initially */
-.modal-footer {
-    display: none;
-}
-
-#settings-menu {
-    display: none;
-}
-
-#chat-modal-form .has-feedback .glyphicon {
-    display: none;
+.modal-title {
+    color: #000000;
 }
