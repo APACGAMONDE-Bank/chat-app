@@ -19,7 +19,5 @@
     "unused": true,
     "strict": true,
 
-    "globals": {
-        "$": false
-    }
+    "globals": {}
 }

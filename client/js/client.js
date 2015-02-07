@@ -1,5 +1,8 @@
 'use strict';
 
+var io = require('socket.io-client');
+var $ = global.jQuery = require('jquery');
+var bootstrap = require('bootstrap');
 var React = require('react');
 
 var client = io();

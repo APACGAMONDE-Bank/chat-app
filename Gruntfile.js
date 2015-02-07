@@ -32,7 +32,7 @@ module.exports = function(grunt) {
                     src: ['build/app.js'],
                     dest: 'build/main.js'
                 }, {
-                    src: ['client/css/*'],
+                    src: ['node_modules/bootstrap/dist/css/bootstrap.css', 'client/css/*.css'],
                     dest: 'build/main.css'
                 }]
             }
