@@ -7,6 +7,7 @@ var io = require('socket.io-client');
 var React = require('react');
 
 // ReactJS components
+var Alert = require('./components/common/Alert.jsx');
 var ChatBox = require('./components/ChatBox.jsx');
 var UsersBox = require('./components/UsersBox.jsx');
 
@@ -83,7 +84,8 @@ var ChatApp = React.createClass({
         client.emit('user:logout');
         this.setState({
             self: {username: null},
-            loggedIn: false
+            loggedIn: false,
+            alert: {error: false, message: ''}
         });
     },
 
@@ -145,13 +147,7 @@ var ChatApp = React.createClass({
     },
 
     render: function() {
-        var alertClass = this.state.alert.error ? 'alert alert-danger alert-dismissible' : 'alert alert-success alert-dismissible';
-        var alert = (
-            <div className={alertClass} role="alert">
-                <button className="close" type="button" data-dismiss="alert">&times;</button>
-                <strong>{this.state.alert.error ? 'Error!' : ''}</strong> {this.state.alert.message}
-            </div>
-        );
+        var alert = <Alert error={this.state.alert.error} message={this.state.alert.message}/>;
         return (
             <div className="container">
                 <div className="row">

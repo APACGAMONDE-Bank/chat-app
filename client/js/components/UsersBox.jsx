@@ -15,7 +15,7 @@ var UsersBox = React.createClass({
                     <UserList users={this.props.users}/>
                 </div>
             </div>
-            );
+        );
     }
 });
 
@@ -25,13 +25,13 @@ var UserList = React.createClass({
         var renderUser = function(user, index){
             return (
                 <UserItem key={index} user={user}/>
-                );
+            );
         };
         return (
             <ul className="list-group" id="chat-users">
                 {this.props.users.map(renderUser)}
             </ul>
-            );
+        );
     }
 });
 
@@ -49,7 +49,7 @@ var UserItem = React.createClass({
                     </div>
                 </div>
             </li>
-            );
+        );
     }
 });
 

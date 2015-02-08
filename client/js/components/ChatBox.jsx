@@ -2,6 +2,8 @@
 
 var React = require('react');
 
+var Modal = require('./common/Modal.jsx');
+
 var ChatBox = React.createClass({
 
     render: function() {
@@ -19,10 +21,10 @@ var ChatBox = React.createClass({
                 <div className="panel-heading">
                     <span className="text-uppercase">Chat</span>
                     <ChatSettings
-                    loggedIn={this.props.loggedIn}
-                    onLogin={this.props.onLogin}
-                    onLogout={this.props.onLogout}
-                    onChangeUsername={this.props.onChangeUsername}
+                        loggedIn={this.props.loggedIn}
+                        onLogin={this.props.onLogin}
+                        onLogout={this.props.onLogout}
+                        onChangeUsername={this.props.onChangeUsername}
                     />
                 </div>
                 <div className="panel-body">
@@ -31,13 +33,13 @@ var ChatBox = React.createClass({
                 </div>
                 <div className="panel-footer">
                     <ChatForm
-                    loggedIn={this.props.loggedIn}
-                    onMessageSubmit={this.props.onMessageSubmit}
-                    onUserTyping={this.props.onUserTyping}
+                        loggedIn={this.props.loggedIn}
+                        onMessageSubmit={this.props.onMessageSubmit}
+                        onUserTyping={this.props.onUserTyping}
                     />
                 </div>
             </div>
-            );
+        );
     }
 });
 
@@ -59,29 +61,19 @@ var ChatModal = React.createClass({
 
     render: function() {
         return (
-            <div className="modal fade" role="dialog">
-                <div className="modal-dialog modal-sm modal-vertical-center">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <button className="close" type="button" data-dismiss="modal">&times;</button>
-                            <h4 className="modal-title">Enter a username</h4>
-                        </div>
-                        <div className="modal-body">
-                            <form onSubmit={this.handleSubmit}>
-                                <div className="form-group has-feedback">
-                                    <div className="input-group">
-                                        <span className="input-group-addon">@</span>
-                                        <input className="form-control" type="text" placeholder="Username" autoComplete="off" ref="text"/>
-                                        <span className="glyphicon glyphicon-lg glyphicon-remove form-control-feedback"></span>
-                                    </div>
-                                </div>
-                                <button className="btn btn-primary btn-block" type="submit">OK</button>
-                            </form>
+            <Modal title="Enter a username">
+                <form onSubmit={this.handleSubmit}>
+                    <div className="form-group has-feedback">
+                        <div className="input-group">
+                            <span className="input-group-addon">@</span>
+                            <input className="form-control" type="text" placeholder="Username" autoComplete="off" ref="text"/>
+                            <span className="glyphicon glyphicon-lg glyphicon-remove form-control-feedback"></span>
                         </div>
                     </div>
-                </div>
-            </div>
-            );
+                    <button className="btn btn-primary btn-block" type="submit">OK</button>
+                </form>
+            </Modal>
+        );
     }
 });
 
@@ -114,23 +106,23 @@ var ChatSettings = React.createClass({
                         <li role="presentation"><a role="menuitem" href="#" onClick={this.handleLogout}>Logout</a></li>
                     </ul>
                 </div>
-                );
+            );
         } else {
             chatSettings = (
                 <button className="btn btn-xs btn-default pull-right" type="button" onClick={this.handleShowModal}>Join Chat</button>
-                );
+            );
         }
         return (
             <span>
                 {chatSettings}
                 <ChatModal ref="modal"
-                loggedIn={this.props.loggedIn}
-                onLogin={this.props.onLogin}
-                onChangeUsername={this.props.onChangeUsername}
-                handleHideModal={this.handleHideModal}
+                    loggedIn={this.props.loggedIn}
+                    onLogin={this.props.onLogin}
+                    onChangeUsername={this.props.onChangeUsername}
+                    handleHideModal={this.handleHideModal}
                 />
             </span>
-            );
+        );
     }
 });
 
@@ -139,14 +131,19 @@ var ChatMessageList = React.createClass({
     render: function() {
         var renderMessage = function(message, index) {
             return (
-                <ChatMessageItem key={index} username={message.username} message={message.text} time={message.time}/>
-                );
+                <ChatMessageItem
+                    key={index}
+                    username={message.username}
+                    message={message.text}
+                    time={message.time}
+                />
+            );
         };
         return (
             <ul className="list-group" id="chat-messages">
                 {this.props.messages.map(renderMessage)}
             </ul>
-            );
+        );
     }
 });
 
@@ -161,7 +158,7 @@ var ChatMessageItem = React.createClass({
                     <span className="pull-right text-muted message-time">{this.props.time}</span>
                     <div className="clearfix"></div>
                 </li>
-                );
+            );
         } else {
             return (
                 <li>
@@ -169,7 +166,7 @@ var ChatMessageItem = React.createClass({
                     <span className="pull-right text-muted message-time">{this.props.time}</span>
                     <div className="clearfix"></div>
                 </li>
-                );
+            );
         }
     }
 });
@@ -203,7 +200,7 @@ var ChatForm = React.createClass({
                     </div>
                 </fieldset>
             </form>
-            );
+        );
     }
 });
 
