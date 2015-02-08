@@ -2,13 +2,16 @@
 
 var React = require('react');
 
+var Panel = require('./common/Panel.jsx');
 var Modal = require('./common/Modal.jsx');
 
 var ChatBox = React.createClass({
 
     render: function() {
         var usersTypingMessage = '',
-            numUsersTyping = this.props.usersTyping.length;
+            numUsersTyping = this.props.usersTyping.length,
+            header,
+            footer;
         if (numUsersTyping > 3) {
             usersTypingMessage = 'Several people are typing...';
         } else if (numUsersTyping > 1) {
@@ -16,29 +19,29 @@ var ChatBox = React.createClass({
         } else if (numUsersTyping > 0) {
             usersTypingMessage = this.props.usersTyping[0] + ' is typing...';
         }
-        return (
-            <div className="panel panel-primary">
-                <div className="panel-heading">
-                    <span className="text-uppercase">Chat</span>
-                    <ChatSettings
-                        loggedIn={this.props.loggedIn}
-                        onLogin={this.props.onLogin}
-                        onLogout={this.props.onLogout}
-                        onChangeUsername={this.props.onChangeUsername}
-                    />
-                </div>
-                <div className="panel-body">
-                    <ChatMessageList messages={this.props.messages}/>
-                    <div className="text-muted" id="users-typing"><small>{usersTypingMessage}</small></div>
-                </div>
-                <div className="panel-footer">
-                    <ChatForm
-                        loggedIn={this.props.loggedIn}
-                        onMessageSubmit={this.props.onMessageSubmit}
-                        onUserTyping={this.props.onUserTyping}
-                    />
-                </div>
+        header = (
+            <div>
+                <span className="text-uppercase">Chat</span>
+                <ChatSettings
+                    loggedIn={this.props.loggedIn}
+                    onLogin={this.props.onLogin}
+                    onLogout={this.props.onLogout}
+                    onChangeUsername={this.props.onChangeUsername}
+                />
             </div>
+        );
+        footer = (
+            <ChatForm
+                loggedIn={this.props.loggedIn}
+                onMessageSubmit={this.props.onMessageSubmit}
+                onUserTyping={this.props.onUserTyping}
+            />
+        );
+        return (
+            <Panel title="CHAT" header={header} footer={footer}>
+                <ChatMessageList messages={this.props.messages}/>
+                <div className="text-muted" id="users-typing"><small>{usersTypingMessage}</small></div>
+            </Panel>
         );
     }
 });

@@ -2,19 +2,21 @@
 
 var React = require('react');
 
+var Panel = require('./common/Panel.jsx');
+
 var UsersBox = React.createClass({
 
     render: function() {
-        return (
-            <div className="panel panel-info">
-                <div className="panel-heading">
-                    <span className="badge">{this.props.users.length}</span>
-                    <span className="text-uppercase"> Online Users</span>
-                </div>
-                <div className="panel-body">
-                    <UserList users={this.props.users}/>
-                </div>
+        var header = (
+            <div>
+                <span className="badge">{this.props.users.length}</span>
+                <span className="text-uppercase"> Online Users</span>
             </div>
+        );
+        return (
+            <Panel class='info' header={header}>
+                <UserList users={this.props.users}/>
+            </Panel>
         );
     }
 });
