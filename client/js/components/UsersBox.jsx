@@ -30,7 +30,7 @@ var UserList = React.createClass({
             );
         };
         return (
-            <ul className="list-group" id="chat-users">
+            <ul className="list-group" id="user-list">
                 {this.props.users.map(renderUser)}
             </ul>
         );

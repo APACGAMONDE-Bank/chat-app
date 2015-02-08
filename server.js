@@ -21,7 +21,18 @@ var socket = io(server);
 
 // Globals
 var users = {};
-var usersTyping = [];
+var channels = {
+    default: {
+        name: 'Home',
+        description: 'The default channel',
+        usersTyping: []
+    },
+    test: {
+        name: 'Test',
+        description: 'Test Channel',
+        usersTyping: []
+    }
+};
 
 // TODO:
 // Add avatars (Gravatar?)
@@ -45,6 +56,7 @@ server.listen(config.PORT, function() {
 socket.on('connection', function(client) {
 
     client.emit('update-users', getUsersArray());
+    client.emit('update-channels', getChannelsArray());
 
     client.on('user:login', function(username) {
         logger.debug(username + ' requesting to join');
@@ -52,20 +64,23 @@ socket.on('connection', function(client) {
         var newMessage;
 
         if (!errorMessage) {
-            users[client.id] = {};
-            users[client.id].name = username;
-            users[client.id].avatar = '/img/placeholder-64x64.svg';
+            users[client.id] = {
+                name: username,
+                avatar: '/img/placeholder-64x64.svg',
+                channel: 'default'
+            };
+            client.join(channels.default.name);
             newMessage = composeMessage('You have connected to the chat server', false);
             client.emit('message:new', newMessage);
             newMessage = composeMessage(username + ' has joined chat', false);
-            client.broadcast.emit('message:new', newMessage);
-            client.emit('user:login:success', username);
-            logger.debug(username + ' successfully joined');
+            client.broadcast.to(channels.default.name).emit('message:new', newMessage);
+            client.emit('user:login:success', username, channels.default.name);
+            logger.debug(username + ' successfully logged in');
 
             socket.sockets.emit('update-users', getUsersArray());
         } else {
             client.emit('user:login:failure', errorMessage);
-            logger.debug(username + ' failed to join: ' + errorMessage);
+            logger.debug(username + ' failed to login: ' + errorMessage);
         }
     });
 
@@ -91,37 +106,62 @@ socket.on('connection', function(client) {
     });
     
     client.on('user:logout', function() {
-        var newMessage = composeMessage('You have left the chat server', false);
+        var newMessage,
+            channelName = channels[users[client.id].channel].name;
+        client.leave(channelName);
+        newMessage= composeMessage('You have left the chat server', false);
         client.emit('message:new', newMessage);
         newMessage = composeMessage(users[client.id].name + ' has left chat', false);
         client.broadcast.emit('message:new', newMessage);
-        logger.debug(users[client.id].name + ' left');
+        logger.debug(users[client.id].name + ' logged out');
         deleteUser(client.id);
         socket.sockets.emit('update-users', getUsersArray());
     });
+
+    client.on('channel:join', function(channel) {
+        var oldChannelName = channels[users[client.id].channel].name,
+            newMessage;
+        client.leave(oldChannelName);
+        newMessage = composeMessage(users[client.id].name + ' has left the channel', false);
+        socket.to(oldChannelName).emit('message:new', newMessage);
+        client.join(channel);
+        newMessage = composeMessage(users[client.id].name + ' has joined the channel', false);
+        socket.to(channel).emit('message:new', newMessage);
+        for (var key in channels) {
+            if (channels.hasOwnProperty(key) && channels[key].name === channel) {
+                users[client.id].channel = key;
+                break;
+            }
+        }
+        client.emit('channel:join:success', channel);
+        logger.debug(users[client.id].name + ' left channel ' + oldChannelName + ' and joined channel ' + channel);
+    });
     
     client.on('message:send', function(message) {
-        var newMessage = composeMessage(message, true);
-        socket.sockets.emit('message:new', newMessage);
+        var newMessage = composeMessage(message, true),
+            channelName = channels[users[client.id].channel].name;
+        socket.to(channelName).emit('message:new', newMessage);
         logger.debug(newMessage.username + ' said ' + newMessage.text + ' at ' + newMessage.time);
     });
     
     client.on('user:typing', function() {
-        usersTyping.push(users[client.id].name);
-        socket.sockets.emit('update-users-typing', usersTyping);
+        var channelName = channels[users[client.id].channel].name;
+        channels[users[client.id].channel].usersTyping.push(users[client.id].name);
+        socket.to(channelName).emit('update-users-typing', channels[users[client.id].channel].usersTyping);
     });
     
     client.on('user:typing:done', function() {
-        var i = usersTyping.indexOf(users[client.id].name);
-        usersTyping.splice(i, 1);
-        socket.sockets.emit('update-users-typing', usersTyping);
+        var channelName = channels[users[client.id].channel].name,
+            i = channels[users[client.id].channel].usersTyping.indexOf(users[client.id].name);
+        channels[users[client.id].channel].usersTyping.splice(i, 1);
+        socket.to(channelName).emit('update-users-typing', channels[users[client.id].channel].usersTyping);
     });
     
     client.on('disconnect', function() {
         if (users[client.id] !== undefined) {
             var newMessage = composeMessage(users[client.id].name + ' has left chat', false);
             socket.sockets.emit('message:new', newMessage);
-            logger.debug(users[client.id].name + ' left');
+            logger.debug(users[client.id].name + ' disconnected');
             deleteUser(client.id);
             socket.sockets.emit('update-users', getUsersArray());
         }
@@ -130,6 +170,12 @@ socket.on('connection', function(client) {
     function getUsersArray() {
         return Object.keys(users).map(function(clientId) {
             return users[clientId];
+        });
+    }
+
+    function getChannelsArray() {
+        return Object.keys(channels).map(function(key) {
+            return channels[key];
         });
     }
 

@@ -10,6 +10,7 @@ var React = require('react');
 var Alert = require('./components/common/Alert.jsx');
 var ChatBox = require('./components/ChatBox.jsx');
 var UsersBox = require('./components/UsersBox.jsx');
+var ChannelsBox = require('./components/ChannelsBox.jsx');
 
 // Setup socket.io connection
 var client = io();
@@ -28,13 +29,17 @@ var ChatApp = React.createClass({
         client.on('user:update:success', this.userUpdateSuccess);
         client.on('user:update:failure', this.userUpdateFailure);
         client.on('update-users', this.updateUsers);
+        client.on('channel:join:success', this.channelJoinSuccess);
+        client.on('update-channels', this.updateChannels);
         client.on('message:new', this.updateMessages);
         client.on('update-users-typing', this.updateUsersTyping);
 
         return {
-            self: {username: null},
+            username: null,
+            currChannel: null,
             users: [],
             messages: [],
+            channels: [],
             loggedIn: false,
             isTyping: false,
             usersTyping: [],
@@ -50,6 +55,7 @@ var ChatApp = React.createClass({
 
     onConnectError: function() {
         this.setState({
+            currChannel: null,
             loggedIn: false,
             isTyping: false,
             usersTyping: [],
@@ -59,7 +65,7 @@ var ChatApp = React.createClass({
 
     onReconnect: function() {
         this.setState({
-            self: {username: null},
+            username: null,
             users: [],
             messages: [],
             alert: {error: false, message: 'Successfully reconnected!'}
@@ -74,6 +80,10 @@ var ChatApp = React.createClass({
         client.emit('user:update', username);
     },
 
+    onChannelJoin: function(channelName) {
+        client.emit('channel:join', channelName);
+    },
+
     onMessageSubmit: function(message) {
         clearTimeout(typingTimeout);
         this.onUserDoneTyping();
@@ -83,7 +93,8 @@ var ChatApp = React.createClass({
     onLogout: function() {
         client.emit('user:logout');
         this.setState({
-            self: {username: null},
+            username: null,
+            currChannel: null,
             loggedIn: false,
             alert: {error: false, message: ''}
         });
@@ -105,9 +116,10 @@ var ChatApp = React.createClass({
         client.emit('user:typing:done');
     },
 
-    userLoginSuccess: function(username) {
+    userLoginSuccess: function(username, channelName) {
         this.setState({
-            self: {username: username},
+            username: username,
+            currChannel: channelName,
             loggedIn: true,
             alert: {error: false, message: ''}
         });
@@ -119,13 +131,21 @@ var ChatApp = React.createClass({
 
     userUpdateSuccess: function(username) {
         this.setState({
-            self: {username: username},
+            username: username,
             alert: {error: false, message: ''}
         });
     },
 
     userUpdateFailure: function(message) {
         this.setState({alert: {error: true, message: message}});
+    },
+
+    channelJoinSuccess: function(channelName) {
+        this.setState({currChannel: channelName});
+    },
+
+    updateChannels: function(channels) {
+        this.setState({channels: channels});
     },
 
     updateUsers: function(users) {
@@ -139,7 +159,7 @@ var ChatApp = React.createClass({
     },
 
     updateUsersTyping: function(users) {
-        var ownUsername = this.state.self.username,
+        var ownUsername = this.state.username,
             otherUsers = users.filter(function(username) {
                 return (username !== ownUsername);
             });
@@ -169,6 +189,13 @@ var ChatApp = React.createClass({
                             onMessageSubmit={this.onMessageSubmit}
                             onLogout={this.onLogout}
                             onUserTyping={this.onUserTyping}
+                        />
+                    </div>
+                    <div className="col-md-4 col-md-pull-8" id="channels-box">
+                        <ChannelsBox
+                            channels={this.state.channels}
+                            currChannel={this.state.currChannel}
+                            onChannelJoin={this.onChannelJoin}
                         />
                     </div>
                     <div className="col-md-4 col-md-pull-8">

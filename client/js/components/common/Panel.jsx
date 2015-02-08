@@ -5,7 +5,7 @@ var React = require('react');
 var Panel = React.createClass({
 
     getDefaultProps: function() {
-        return {class: 'primary', header: null, footer: null};
+        return {class: 'default', header: null, footer: null};
     },
 
     render: function() {

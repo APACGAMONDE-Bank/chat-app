@@ -84,6 +84,11 @@ module.exports = function(grunt) {
                     cwd: 'client/',
                     src: 'index.html',
                     dest: 'public/'
+                }, {
+                    expand: true,
+                    cwd: 'node_modules/bootstrap/dist/fonts/',
+                    src: '*',
+                    dest: 'public/fonts/'
                 }]
             },
             prod: {
@@ -97,6 +102,11 @@ module.exports = function(grunt) {
                     cwd: 'client/',
                     src: 'index.html',
                     dest: 'dist/'
+                }, {
+                    expand: true,
+                    cwd: 'node_modules/bootstrap/dist/fonts/',
+                    src: '*',
+                    dest: 'dist/fonts/'
                 }]
             }
         },

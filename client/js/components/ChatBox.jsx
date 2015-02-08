@@ -38,7 +38,7 @@ var ChatBox = React.createClass({
             />
         );
         return (
-            <Panel title="CHAT" header={header} footer={footer}>
+            <Panel class="primary" header={header} footer={footer}>
                 <ChatMessageList messages={this.props.messages}/>
                 <div className="text-muted" id="users-typing"><small>{usersTypingMessage}</small></div>
             </Panel>
@@ -143,7 +143,7 @@ var ChatMessageList = React.createClass({
             );
         };
         return (
-            <ul className="list-group" id="chat-messages">
+            <ul className="list-group" id="chat-message-list">
                 {this.props.messages.map(renderMessage)}
             </ul>
         );
