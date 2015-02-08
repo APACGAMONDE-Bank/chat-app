@@ -9,14 +9,15 @@ var log4js = require('log4js');
 // Configuration
 var config = require('./config');
 
+// Logger
+var logger = require('./app/logger');
+
 // Models
 var User = require('./app/models').User;
 var Message = require('./app/models').Message;
 var Channel = require('./app/models').Channel;
 
-// Setup logging
-log4js.configure(config.LOG4JS_CONFIG, {});
-var logger = log4js.getLogger('dev');
+var utils = require('./app/utils');
 
 // Setup server
 var app = express();
@@ -52,12 +53,12 @@ server.listen(config.PORT, function() {
 // socket.io communication
 socket.on('connection', function(client) {
 
-    client.emit('update-users', getUsersArray());
-    client.emit('update-channels', getChannelsArray());
+    client.emit('update-users', utils.getUsersArray(users));
+    client.emit('update-channels', utils.getChannelsArray(channels));
 
     client.on('user:login', function(username) {
         logger.debug(username + ' requesting to join');
-        var errorMessage = validateUsername(client.id, username),
+        var errorMessage = utils.validateUsername(users, client.id, username),
             newMessage;
 
         if (!errorMessage) {
@@ -71,7 +72,7 @@ socket.on('connection', function(client) {
             client.broadcast.to(channels.default.name).emit('message:new', newMessage);
 
             client.emit('user:login:success', username, channels.default.name);
-            socket.sockets.emit('update-users', getUsersArray());
+            socket.sockets.emit('update-users', utils.getUsersArray(users));
             logger.debug(username + ' successfully logged in');
         } else {
             client.emit('user:login:failure', errorMessage);
@@ -81,7 +82,7 @@ socket.on('connection', function(client) {
 
     client.on('user:update', function(newUsername) {
         var oldUsername = users[client.id].name,
-            errorMessage = validateUsername(client.id, newUsername),
+            errorMessage = utils.validateUsername(users, client.id, newUsername),
             newMessage;
 
         if (!errorMessage) {
@@ -93,7 +94,7 @@ socket.on('connection', function(client) {
             client.broadcast.emit('message:new', newMessage);
 
             client.emit('user:update:success', newUsername);
-            socket.sockets.emit('update-users', getUsersArray());
+            socket.sockets.emit('update-users', utils.getUsersArray(users));
             logger.debug(oldUsername + ' successfully changed their name to ' + newUsername);
         } else {
             client.emit('user:update:failure', errorMessage);
@@ -114,8 +115,8 @@ socket.on('connection', function(client) {
         client.broadcast.emit('message:new', newMessage);
 
         logger.debug(users[client.id].name + ' logged out');
-        deleteUser(client.id);
-        socket.sockets.emit('update-users', getUsersArray());
+        utils.deleteUser(users, client.id);
+        socket.sockets.emit('update-users', utils.getUsersArray(users));
     });
 
     client.on('channel:join', function(channel) {
@@ -168,47 +169,10 @@ socket.on('connection', function(client) {
             var newMessage = new Message(users[client.id].name + ' has left chat');
             socket.sockets.emit('message:new', newMessage);
 
-            deleteUser(client.id);
-            socket.sockets.emit('update-users', getUsersArray());
+            utils.deleteUser(users, client.id);
+            socket.sockets.emit('update-users', utils.getUsersArray(users));
             logger.debug(users[client.id].name + ' disconnected');
         }
     });
 
-    function getUsersArray() {
-        return Object.keys(users).map(function(clientId) {
-            return users[clientId];
-        });
-    }
-
-    function getChannelsArray() {
-        return Object.keys(channels).map(function(key) {
-            return channels[key];
-        });
-    }
-    
-    function validateUsername(clientId, username) {
-        var msg = '',
-            count = 0;
-        for (var id in users) {
-            if (users.hasOwnProperty(id)) {
-                if (users[id] && users[id].name === username && clientId !== id) {
-                    msg = 'Username already in use';
-                    break;
-                }
-
-                count++;
-                if (count > config.MAX_USERS) {
-                    msg = 'Too many users, try again later';
-                    break;
-                }
-            }
-        }
-        return msg;
-    }
-
-    function deleteUser(clientId) {
-        logger.debug('Deleting user ' + JSON.stringify(users[clientId]));
-        delete users[clientId];
-    }
-    
 });
