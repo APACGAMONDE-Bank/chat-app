@@ -141,6 +141,24 @@ socket.on('connection', function(client) {
         }
         client.emit('channel:join:success', channel);
     });
+
+    client.on('channel:create', function(name, description, callback) {
+        var errorMessage = utils.validateChannel(channels, client.id, name),
+            newMessage;
+
+        if (!errorMessage) {
+            channels[client.id] = new Channel(name, description);
+            logger.debug(users[client.id].name + ' created channel: ' + JSON.stringify(channels[client.id]));
+
+            callback();
+            newMessage = new Message(users[client.id].name + ' created new channel ' + name);
+            socket.sockets.emit('message:new', newMessage);
+            socket.sockets.emit('update-channels', utils.getChannelsArray(channels));
+        } else {
+            callback(errorMessage);
+            logger.debug(users[client.id].name + ' failed to create channel: ' + errorMessage);
+        }
+    });
     
     client.on('message:send', function(message) {
         var channelName = channels[users[client.id].channel].name,
@@ -169,9 +187,9 @@ socket.on('connection', function(client) {
             var newMessage = new Message(users[client.id].name + ' has left chat');
             socket.sockets.emit('message:new', newMessage);
 
+            logger.debug(users[client.id].name + ' disconnected');
             utils.deleteUser(users, client.id);
             socket.sockets.emit('update-users', utils.getUsersArray(users));
-            logger.debug(users[client.id].name + ' disconnected');
         }
     });
 

@@ -2,7 +2,19 @@
 
 var React = require('react');
 
+var ModalMixin = {
+
+    showModal: function() {
+        $(this.getDOMNode()).modal('show');
+    },
+
+    hideModal: function() {
+        $(this.getDOMNode()).modal('hide');
+    }
+};
+
 var Modal = React.createClass({
+    mixins: [ModalMixin],
 
     render: function() {
         return (

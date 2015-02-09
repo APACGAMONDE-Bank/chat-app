@@ -35,6 +35,27 @@ module.exports = {
         return error;
     },
 
+    validateChannel: function(channels, clientId, channelName) {
+        var error = '',
+            count = 0;
+        for (var key in channels) {
+            if (channels.hasOwnProperty(key)) {
+                count++;
+                if (key === clientId) {
+                    error = 'You have already created a channel';
+                    break;
+                } else if (channels[key] && channels[key].name === channelName) {
+                    error = 'A channel with that name already exists';
+                    break;
+                } else if (count > config.MAX_CHANNELS) {
+                    error = 'Maximum number of channels exceeded, try again later';
+                    break;
+                }
+            }
+        }
+        return error;
+    },
+
     deleteUser: function(users, clientId) {
         logger.debug('Deleting user ' + JSON.stringify(users[clientId]));
         delete users[clientId];

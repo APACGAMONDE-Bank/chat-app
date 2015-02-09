@@ -84,6 +84,17 @@ var ChatApp = React.createClass({
         client.emit('channel:join', channelName);
     },
 
+    onChannelCreate: function(name, description) {
+        var that = this;
+        client.emit('channel:create', name, description, function(error) {
+            if (error) {
+                that.setState({alert: {error: true, message: error}});
+            } else {
+                that.setState({alert: {error: false, message: 'Successfully created channel'}});
+            }
+        });
+    },
+
     onMessageSubmit: function(message) {
         clearTimeout(typingTimeout);
         this.onUserDoneTyping();
@@ -193,9 +204,11 @@ var ChatApp = React.createClass({
                     </div>
                     <div className="col-md-4 col-md-pull-8" id="channels-box">
                         <ChannelsBox
+                            loggedIn={this.state.loggedIn}
                             channels={this.state.channels}
                             currChannel={this.state.currChannel}
                             onChannelJoin={this.onChannelJoin}
+                            onChannelCreate={this.onChannelCreate}
                         />
                     </div>
                     <div className="col-md-4 col-md-pull-8">

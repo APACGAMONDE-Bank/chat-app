@@ -1,11 +1,15 @@
 
 /* ChatApp */
 .modal-vertical-center {
-    margin-top: 20%;
+    margin-top: 15%;
 }
 
 .modal-title {
     color: #000000;
+}
+
+form textarea {
+    resize: none;
 }
 
 /* ChannelsBox */
@@ -19,9 +23,13 @@
 }
 
 #channel-list {
-    max-height: 200px;
-    list-style-type: none;
     margin: 0;
+}
+
+#channel-list ul {
+    max-height: 200px;
+    overflow-y: auto;
+    list-style-type: none;
 }
 
 #channel-list .list-group {

@@ -52,7 +52,7 @@ var ChatModal = React.createClass({
         e.preventDefault();
         var username = this.refs.text.getDOMNode().value.trim();
         if (username !== '') {
-            this.props.handleHideModal();
+            this.refs.modal.hideModal();
             if (this.props.loggedIn) {
                 this.props.onChangeUsername(username);
             } else {
@@ -64,13 +64,12 @@ var ChatModal = React.createClass({
 
     render: function() {
         return (
-            <Modal title="Enter a username">
+            <Modal title="Enter a username" ref="modal">
                 <form onSubmit={this.handleSubmit}>
-                    <div className="form-group has-feedback">
+                    <div className="form-group">
                         <div className="input-group">
                             <span className="input-group-addon">@</span>
-                            <input className="form-control" type="text" placeholder="Username" autoComplete="off" ref="text"/>
-                            <span className="glyphicon glyphicon-lg glyphicon-remove form-control-feedback"></span>
+                            <input className="form-control" type="text" placeholder="Username" autoComplete="off" ref="text" required/>
                         </div>
                     </div>
                     <button className="btn btn-primary btn-block" type="submit">OK</button>
@@ -82,15 +81,13 @@ var ChatModal = React.createClass({
 
 var ChatSettings = React.createClass({
 
-    handleShowModal: function() {
+    handleShowModal: function(e) {
+        e.preventDefault();
         $(this.refs.modal.getDOMNode()).modal('show');
     },
 
-    handleHideModal: function() {
-        $(this.refs.modal.getDOMNode()).modal('hide');
-    },
-
-    handleLogout: function() {
+    handleLogout: function(e) {
+        e.preventDefault();
         this.props.onLogout();
     },
 
@@ -104,9 +101,9 @@ var ChatSettings = React.createClass({
                     </button>
                     <ul className="dropdown-menu dropdown-menu-right" role="menu">
                         <li role="presentation"><a role="menuitem" href="#">Refresh</a></li>
-                        <li role="presentation"><a role="menuitem" href="#" onClick={this.handleShowModal}>Change Username</a></li>
+                        <li role="presentation"><a role="menuitem" onClick={this.handleShowModal}>Change Username</a></li>
                         <li role="presentation" className="divider"></li>
-                        <li role="presentation"><a role="menuitem" href="#" onClick={this.handleLogout}>Logout</a></li>
+                        <li role="presentation"><a role="menuitem" onClick={this.handleLogout}>Logout</a></li>
                     </ul>
                 </div>
             );
@@ -122,7 +119,6 @@ var ChatSettings = React.createClass({
                     loggedIn={this.props.loggedIn}
                     onLogin={this.props.onLogin}
                     onChangeUsername={this.props.onChangeUsername}
-                    handleHideModal={this.handleHideModal}
                 />
             </span>
         );

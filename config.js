@@ -33,5 +33,6 @@ config.LOG4JS_CONFIG = {
 
 // app settings
 config.MAX_USERS = 20;
+config.MAX_CHANNELS = 5;
 
 module.exports = config;
