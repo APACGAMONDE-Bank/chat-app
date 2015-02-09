@@ -28,7 +28,7 @@ var Channel = function Channel(name, description) {
 };
 
 Channel.prototype.addUserTyping = function(username) {
-    this.usersTyping.push(username)
+    this.usersTyping.push(username);
 };
 
 Channel.prototype.removeUserTyping = function(username) {
