@@ -24,12 +24,7 @@ var ChatApp = React.createClass({
         client.on('connect_error', this.onConnectError);
         client.on('reconnect', this.onReconnect);
 
-        client.on('user:login:success', this.userLoginSuccess);
-        client.on('user:login:failure', this.userLoginFailure);
-        client.on('user:update:success', this.userUpdateSuccess);
-        client.on('user:update:failure', this.userUpdateFailure);
         client.on('update-users', this.updateUsers);
-        client.on('channel:join:success', this.channelJoinSuccess);
         client.on('update-channels', this.updateChannels);
         client.on('message:new', this.updateMessages);
         client.on('update-users-typing', this.updateUsersTyping);
@@ -49,8 +44,9 @@ var ChatApp = React.createClass({
 
     getDefaultProps: function() {
         return {
+            defaultChannel: 'Home',
             typingTimeoutDelay: 5000
-        }
+        };
     },
 
     onConnectError: function() {
@@ -68,20 +64,47 @@ var ChatApp = React.createClass({
             username: null,
             users: [],
             messages: [],
-            alert: {error: false, message: 'Successfully reconnected!'}
+            alert: {error: false, message: 'Reconnected to the server'}
         });
     },
 
     onLogin: function(username) {
-        client.emit('user:login', username);
+        var that = this;
+        client.emit('user:login', username, function(error) {
+            if (!error) {
+                that.setState({
+                    username: username,
+                    currChannel: that.props.defaultChannel,
+                    loggedIn: true,
+                    alert: {error: false, message: 'Logged in'}
+                });
+            } else {
+                that.setState({alert: {error: true, message: error}});
+            }
+        });
     },
 
     onChangeUsername: function(username) {
-        client.emit('user:update', username);
+        var that = this;
+        client.emit('user:update', username, function(error) {
+            if (!error) {
+                that.setState({
+                    username: username,
+                    alert: {error: false, message: 'Settings updated'}
+                });
+            } else {
+                that.setState({alert: {error: true, message: error}});
+            }
+        });
     },
 
     onChannelJoin: function(channelName) {
-        client.emit('channel:join', channelName);
+        var that = this;
+        client.emit('channel:join', channelName, function(error) {
+            if (!error) {
+                that.setState({currChannel: channelName});
+            }
+        });
     },
 
     onChannelCreate: function(name, description) {
@@ -90,7 +113,7 @@ var ChatApp = React.createClass({
             if (error) {
                 that.setState({alert: {error: true, message: error}});
             } else {
-                that.setState({alert: {error: false, message: 'Successfully created channel'}});
+                that.setState({alert: {error: false, message: 'Channel created'}});
             }
         });
     },
@@ -102,12 +125,16 @@ var ChatApp = React.createClass({
     },
 
     onLogout: function() {
-        client.emit('user:logout');
-        this.setState({
-            username: null,
-            currChannel: null,
-            loggedIn: false,
-            alert: {error: false, message: ''}
+        var that = this;
+        client.emit('user:logout', function(error) {
+            if (!error) {
+                that.setState({
+                    username: null,
+                    currChannel: null,
+                    loggedIn: false,
+                    alert: {error: false, message: 'Logged out'}
+                });
+            }
         });
     },
 
@@ -125,34 +152,6 @@ var ChatApp = React.createClass({
     onUserDoneTyping: function() {
         this.setState({isTyping: false});
         client.emit('user:typing:done');
-    },
-
-    userLoginSuccess: function(username, channelName) {
-        this.setState({
-            username: username,
-            currChannel: channelName,
-            loggedIn: true,
-            alert: {error: false, message: ''}
-        });
-    },
-
-    userLoginFailure: function(message) {
-        this.setState({alert: {error: true, message: message}});
-    },
-
-    userUpdateSuccess: function(username) {
-        this.setState({
-            username: username,
-            alert: {error: false, message: ''}
-        });
-    },
-
-    userUpdateFailure: function(message) {
-        this.setState({alert: {error: true, message: message}});
-    },
-
-    channelJoinSuccess: function(channelName) {
-        this.setState({currChannel: channelName});
     },
 
     updateChannels: function(channels) {

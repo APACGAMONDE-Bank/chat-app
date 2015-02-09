@@ -56,7 +56,7 @@ socket.on('connection', function(client) {
     client.emit('update-users', utils.getUsersArray(users));
     client.emit('update-channels', utils.getChannelsArray(channels));
 
-    client.on('user:login', function(username) {
+    client.on('user:login', function(username, callback) {
         logger.debug(username + ' requesting to join');
         var errorMessage = utils.validateUsername(users, client.id, username),
             newMessage;
@@ -71,16 +71,16 @@ socket.on('connection', function(client) {
             newMessage = new Message(username + ' has joined chat');
             client.broadcast.to(channels.default.name).emit('message:new', newMessage);
 
-            client.emit('user:login:success', username, channels.default.name);
+            callback();
             socket.sockets.emit('update-users', utils.getUsersArray(users));
             logger.debug(username + ' successfully logged in');
         } else {
-            client.emit('user:login:failure', errorMessage);
+            callback(errorMessage);
             logger.debug(username + ' failed to login: ' + errorMessage);
         }
     });
 
-    client.on('user:update', function(newUsername) {
+    client.on('user:update', function(newUsername, callback) {
         var oldUsername = users[client.id].name,
             errorMessage = utils.validateUsername(users, client.id, newUsername),
             newMessage;
@@ -93,16 +93,16 @@ socket.on('connection', function(client) {
             newMessage = new Message(oldUsername + ' has changed their name to ' + newUsername);
             client.broadcast.emit('message:new', newMessage);
 
-            client.emit('user:update:success', newUsername);
+            callback();
             socket.sockets.emit('update-users', utils.getUsersArray(users));
             logger.debug(oldUsername + ' successfully changed their name to ' + newUsername);
         } else {
-            client.emit('user:update:failure', errorMessage);
+            callback(errorMessage);
             logger.debug(newUsername + ' failed to update: ' + errorMessage);
         }
     });
     
-    client.on('user:logout', function() {
+    client.on('user:logout', function(callback) {
         var channelName = channels[users[client.id].channel].name,
             newMessage;
 
@@ -117,9 +117,10 @@ socket.on('connection', function(client) {
         logger.debug(users[client.id].name + ' logged out');
         utils.deleteUser(users, client.id);
         socket.sockets.emit('update-users', utils.getUsersArray(users));
+        callback();
     });
 
-    client.on('channel:join', function(channel) {
+    client.on('channel:join', function(channel, callback) {
         var oldChannelName = channels[users[client.id].channel].name,
             newMessage;
 
@@ -139,7 +140,7 @@ socket.on('connection', function(client) {
                 break;
             }
         }
-        client.emit('channel:join:success', channel);
+        callback();
     });
 
     client.on('channel:create', function(name, description, callback) {

@@ -19,7 +19,7 @@ var Alert = React.createClass({
         return (
             <div className={alertClass} role="alert">
                 <button className="close" type="button" data-dismiss="alert">&times;</button>
-                <strong>{this.props.error ? 'Error!' : ''}</strong> {this.props.message}
+                <strong>{this.props.error ? 'Error!' : 'Success!'}</strong> {this.props.message}
             </div>
         );
     }
