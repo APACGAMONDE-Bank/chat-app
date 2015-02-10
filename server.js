@@ -3,7 +3,7 @@
 // Vendor packages
 var express = require('express');
 var http = require('http');
-var io = require('socket.io');
+var socketio = require('socket.io');
 var log4js = require('log4js');
 
 // Configuration
@@ -22,7 +22,7 @@ var utils = require('./app/utils');
 // Setup server
 var app = express();
 var server = http.Server(app);
-var socket = io(server);
+var io = socketio(server);
 
 // Globals
 var users = {};
@@ -50,28 +50,28 @@ server.listen(config.PORT, function() {
 });
 
 // socket.io communication
-socket.on('connection', function(client) {
-    logger.debug('Client connection: ' + client.id);
+io.on('connection', function(socket) {
+    logger.debug('Client connection: ' + socket.id);
 
-    client.emit('update-users', utils.getUsersArray(users));
-    client.emit('update-channels', utils.getChannelsArray(channels));
+    socket.emit('update-users', utils.getUsersArray(users));
+    socket.emit('update-channels', utils.getChannelsArray(channels));
 
-    client.on('user:login', function(username, callback) {
+    socket.on('user:login', function(username, callback) {
         logger.debug(username + ' requesting to join');
-        var errorMessage = utils.validateUsername(users, client.id, username),
+        var errorMessage = utils.validateUsername(users, socket.id, username),
             newMessage;
 
         if (!errorMessage) {
             // create new User and join the default channel
-            users[client.id] = new User(username);
-            client.join(channels.default.name);
+            users[socket.id] = new User(username);
+            socket.join(channels.default.name);
 
             newMessage = new Message('You have connected to the chat server');
-            client.emit('message:new', newMessage);
+            socket.emit('message:new', newMessage);
             newMessage = new Message(username + ' has joined chat');
-            client.broadcast.to(channels.default.name).emit('message:new', newMessage);
+            socket.broadcast.to(channels.default.name).emit('message:new', newMessage);
 
-            socket.sockets.emit('update-users', utils.getUsersArray(users));
+            io.sockets.emit('update-users', utils.getUsersArray(users));
             callback();
             logger.debug(username + ' successfully logged in');
         } else {
@@ -80,20 +80,20 @@ socket.on('connection', function(client) {
         }
     });
 
-    client.on('user:update', function(newUsername, callback) {
-        var oldUsername = users[client.id].name,
-            errorMessage = utils.validateUsername(users, client.id, newUsername),
+    socket.on('user:update', function(newUsername, callback) {
+        var oldUsername = users[socket.id].name,
+            errorMessage = utils.validateUsername(users, socket.id, newUsername),
             newMessage;
 
         if (!errorMessage) {
-            users[client.id].name = newUsername;
+            users[socket.id].name = newUsername;
 
             newMessage = new Message('You have changed your name to ' + newUsername);
-            client.emit('message:new', newMessage);
+            socket.emit('message:new', newMessage);
             newMessage = new Message(oldUsername + ' has changed their name to ' + newUsername);
-            client.broadcast.emit('message:new', newMessage);
+            socket.broadcast.emit('message:new', newMessage);
 
-            socket.sockets.emit('update-users', utils.getUsersArray(users));
+            io.sockets.emit('update-users', utils.getUsersArray(users));
             callback();
             logger.debug(oldUsername + ' successfully changed their name to ' + newUsername);
         } else {
@@ -102,121 +102,121 @@ socket.on('connection', function(client) {
         }
     });
     
-    client.on('user:logout', function(callback) {
-        var channelName = channels[users[client.id].channel].name,
+    socket.on('user:logout', function(callback) {
+        var channelName = channels[users[socket.id].channel].name,
             newMessage;
 
-        client.leave(channelName);
-        logger.debug(users[client.id].name + ' left channel ' + channelName);
+        socket.leave(channelName);
+        logger.debug(users[socket.id].name + ' left channel ' + channelName);
 
         newMessage= new Message('You have left the chat server');
-        client.emit('message:new', newMessage);
-        newMessage = new Message(users[client.id].name + ' has left chat');
-        client.broadcast.emit('message:new', newMessage);
+        socket.emit('message:new', newMessage);
+        newMessage = new Message(users[socket.id].name + ' has left chat');
+        socket.broadcast.emit('message:new', newMessage);
 
-        logger.debug(users[client.id].name + ' logged out');
-        utils.deleteUser(users, client.id);
-        socket.sockets.emit('update-users', utils.getUsersArray(users));
+        logger.debug(users[socket.id].name + ' logged out');
+        utils.deleteUser(users, socket.id);
+        io.sockets.emit('update-users', utils.getUsersArray(users));
         callback();
     });
 
-    client.on('channel:join', function(channel, callback) {
-        var oldChannelName = channels[users[client.id].channel].name,
+    socket.on('channel:join', function(channel, callback) {
+        var oldChannelName = channels[users[socket.id].channel].name,
             newMessage;
 
-        client.leave(oldChannelName);
-        newMessage = new Message(users[client.id].name + ' has left the channel');
-        client.broadcast.to(oldChannelName).emit('message:new', newMessage);
-        logger.debug(users[client.id].name + ' left channel ' + oldChannelName);
+        socket.leave(oldChannelName);
+        newMessage = new Message(users[socket.id].name + ' has left the channel');
+        socket.broadcast.to(oldChannelName).emit('message:new', newMessage);
+        logger.debug(users[socket.id].name + ' left channel ' + oldChannelName);
 
-        client.join(channel);
-        newMessage = new Message(users[client.id].name + ' has joined the channel');
-        client.broadcast.to(channel).emit('message:new', newMessage);
-        logger.debug(users[client.id].name + ' joined channel ' + channel);
+        socket.join(channel);
+        newMessage = new Message(users[socket.id].name + ' has joined the channel');
+        socket.broadcast.to(channel).emit('message:new', newMessage);
+        logger.debug(users[socket.id].name + ' joined channel ' + channel);
 
         for (var key in channels) {
             if (channels.hasOwnProperty(key) && channels[key].name === channel) {
-                users[client.id].joinChannel(key);
+                users[socket.id].joinChannel(key);
                 break;
             }
         }
         callback();
     });
 
-    client.on('channel:create', function(name, description, callback) {
-        var errorMessage = utils.validateChannel(channels, client.id, name),
+    socket.on('channel:create', function(name, description, callback) {
+        var errorMessage = utils.validateChannel(channels, socket.id, name),
             newMessage;
 
         if (!errorMessage) {
-            channels[client.id] = new Channel(name, description);
-            logger.debug(users[client.id].name + ' created channel: ' + JSON.stringify(channels[client.id]));
+            channels[socket.id] = new Channel(name, description);
+            logger.debug(users[socket.id].name + ' created channel: ' + JSON.stringify(channels[socket.id]));
 
-            newMessage = new Message(users[client.id].name + ' created new channel ' + name);
-            socket.sockets.emit('message:new', newMessage);
-            socket.sockets.emit('update-channels', utils.getChannelsArray(channels));
+            newMessage = new Message(users[socket.id].name + ' created new channel ' + name);
+            io.sockets.emit('message:new', newMessage);
+            io.sockets.emit('update-channels', utils.getChannelsArray(channels));
             callback();
         } else {
             callback(errorMessage);
-            logger.debug(users[client.id].name + ' failed to create channel: ' + errorMessage);
+            logger.debug(users[socket.id].name + ' failed to create channel: ' + errorMessage);
         }
     });
 
-    client.on('channel:delete', function(name, currChannel, callback) {
-        var clientIds = socket.sockets.adapter.rooms[name],
-            cli,
+    socket.on('channel:delete', function(name, currChannel, callback) {
+        var socketIds = io.sockets.adapter.rooms[name],
+            client,
             newMessage,
             newChannel = (name === currChannel ? channels.default.name : currChannel);
 
-        for (var id in clientIds) { /* jshint ignore: line */
-            cli = socket.sockets.adapter.nsp.connected[id];
-            cli.leave(name);
-            logger.debug(users[cli.id].name + ' left channel ' + name);
+        for (var socketId in socketIds) { /* jshint ignore: line */
+            client = io.sockets.adapter.nsp.connected[socketId];
+            client.leave(name);
+            logger.debug(users[client.id].name + ' left channel ' + name);
 
-            cli.join(channels.default.name);
-            users[cli.id].channel = 'default';
-            newMessage = new Message(users[cli.id].name + ' has joined the channel');
-            cli.broadcast.to(channels.default.name).emit('message:new', newMessage);
-            logger.debug(users[cli.id].name + ' joined channel ' + channels.default.name);
+            client.join(channels.default.name);
+            users[client.id].channel = 'default';
+            newMessage = new Message(users[client.id].name + ' has joined the channel');
+            client.broadcast.to(channels.default.name).emit('message:new', newMessage);
+            logger.debug(users[client.id].name + ' joined channel ' + channels.default.name);
 
-            cli.emit('channel:change', channels.default.name);
+            client.emit('channel:change', channels.default.name);
         }
-        utils.deleteChannel(channels, client.id);
-        newMessage = new Message(users[client.id].name + ' deleted channel ' + name);
-        socket.sockets.emit('message:new', newMessage);
-        socket.sockets.emit('update-channels', utils.getChannelsArray(channels));
+        utils.deleteChannel(channels, socket.id);
+        newMessage = new Message(users[socket.id].name + ' deleted channel ' + name);
+        io.sockets.emit('message:new', newMessage);
+        io.sockets.emit('update-channels', utils.getChannelsArray(channels));
         callback(null, newChannel);
     });
     
-    client.on('message:send', function(message) {
-        var channelName = channels[users[client.id].channel].name,
-            newMessage = new Message(message, users[client.id].name);
+    socket.on('message:send', function(message) {
+        var channelName = channels[users[socket.id].channel].name,
+            newMessage = new Message(message, users[socket.id].name);
 
-        socket.to(channelName).emit('message:new', newMessage);
+        io.to(channelName).emit('message:new', newMessage);
         logger.debug('Sent message to channel ' + channelName + ': ' + JSON.stringify(newMessage));
     });
     
-    client.on('user:typing', function() {
-        var channel = channels[users[client.id].channel];
+    socket.on('user:typing', function() {
+        var channel = channels[users[socket.id].channel];
 
-        channel.addUserTyping(users[client.id].name);
-        socket.to(channel.name).emit('update-users-typing', channel.usersTyping);
+        channel.addUserTyping(users[socket.id].name);
+        io.to(channel.name).emit('update-users-typing', channel.usersTyping);
     });
     
-    client.on('user:typing:done', function() {
-        var channel = channels[users[client.id].channel];
+    socket.on('user:typing:done', function() {
+        var channel = channels[users[socket.id].channel];
 
-        channel.removeUserTyping(users[client.id].name);
-        socket.to(channel.name).emit('update-users-typing', channel.usersTyping);
+        channel.removeUserTyping(users[socket.id].name);
+        io.to(channel.name).emit('update-users-typing', channel.usersTyping);
     });
     
-    client.on('disconnect', function() {
-        if (users[client.id] !== undefined) {
-            var newMessage = new Message(users[client.id].name + ' has left chat');
-            socket.sockets.emit('message:new', newMessage);
+    socket.on('disconnect', function() {
+        if (users[socket.id] !== undefined) {
+            var newMessage = new Message(users[socket.id].name + ' has left chat');
+            io.sockets.emit('message:new', newMessage);
 
-            logger.debug(users[client.id].name + ' disconnected');
-            utils.deleteUser(users, client.id);
-            socket.sockets.emit('update-users', utils.getUsersArray(users));
+            logger.debug(users[socket.id].name + ' disconnected');
+            utils.deleteUser(users, socket.id);
+            io.sockets.emit('update-users', utils.getUsersArray(users));
         }
     });
 
