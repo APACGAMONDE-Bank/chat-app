@@ -127,6 +127,12 @@ var ChatSettings = React.createClass({
 
 var ChatMessageList = React.createClass({
 
+    componentDidUpdate: function() {
+        // auto scroll to bottom
+        var l = $('#chat-message-list');
+        l.scrollTop(l.prop('scrollHeight'));
+    },
+
     render: function() {
         var renderMessage = function(message, index) {
             return (
