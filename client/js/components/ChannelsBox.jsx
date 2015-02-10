@@ -23,8 +23,10 @@ var ChannelBox = React.createClass({
                     loggedIn={this.props.loggedIn}
                     channels={this.props.channels}
                     currChannel={this.props.currChannel}
+                    ownChannel={this.props.ownChannel}
                     onChannelJoin={this.props.onChannelJoin}
                     onChannelCreate={this.props.onChannelCreate}
+                    onChannelDelete={this.props.onChannelDelete}
                 />
             </Panel>
         );
@@ -87,7 +89,9 @@ var ChannelList = React.createClass({
                         channel={channel}
                         loggedIn={this.props.loggedIn}
                         onChannelJoin={this.props.onChannelJoin}
+                        onChannelDelete={this.props.onChannelDelete}
                         currChannel={this.props.currChannel}
+                        ownChannel={this.props.ownChannel}
                     />
                 );
         };
@@ -110,15 +114,26 @@ var ChannelItem = React.createClass({
         this.props.onChannelJoin(channelName);
     },
 
+    handleDeleteChannel: function() {
+        var channelName = this.props.channel.name;
+        this.props.onChannelDelete(channelName);
+    },
+
     render: function() {
         var currChannel = (this.props.currChannel === this.props.channel.name),
+            ownChannel = (this.props.ownChannel === this.props.channel.name),
             joinChannel = (
                 <button className="btn btn-xs btn-default pull-right" type="button" onClick={this.handleJoinChannel} disabled={currChannel}>Join</button>
+            ),
+            deleteChannel = (
+                <button className="btn btn-xs btn-default pull-right" type="button" onClick={this.handleDeleteChannel}>Delete</button>
             );
         return (
             <li className="list-group-item">
                 <span ref="channel">{this.props.channel.name}</span>
                 {this.props.loggedIn ? joinChannel : null}
+                <span>  </span>
+                {this.props.loggedIn && ownChannel ? deleteChannel : null}
             </li>
         );
     }

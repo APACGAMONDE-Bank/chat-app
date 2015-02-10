@@ -28,10 +28,12 @@ var ChatApp = React.createClass({
         client.on('update-channels', this.updateChannels);
         client.on('message:new', this.updateMessages);
         client.on('update-users-typing', this.updateUsersTyping);
+        client.on('channel:change', this.changeChannel);
 
         return {
             username: null,
             currChannel: null,
+            ownChannel: null,
             users: [],
             messages: [],
             channels: [],
@@ -113,7 +115,30 @@ var ChatApp = React.createClass({
             if (error) {
                 that.setState({alert: {error: true, message: error}});
             } else {
-                that.setState({alert: {error: false, message: 'Channel created'}});
+                that.setState({
+                    ownChannel: name,
+                    alert: {error: false, message: 'Channel created'}
+                });
+            }
+        });
+    },
+
+    onChannelDelete: function(channelName) {
+        var that = this;
+        client.emit('channel:delete', channelName, that.state.currChannel, function(error, channel) {
+            if (!error) {
+                if (channel !== that.state.currChannel) {
+                    that.setState({
+                        currChannel: channel,
+                        ownChannel: null,
+                        alert: {error: false, message: 'Channel deleted'}
+                    });
+                } else {
+                    that.setState({
+                        ownChannel: null,
+                        alert: {error: false, message: 'Channel deleted'}
+                    });
+                }
             }
         });
     },
@@ -176,6 +201,10 @@ var ChatApp = React.createClass({
         this.setState({usersTyping: otherUsers});
     },
 
+    changeChannel: function(channelName) {
+        this.setState({currChannel: channelName});
+    },
+
     render: function() {
         var alert = <Alert error={this.state.alert.error} message={this.state.alert.message}/>;
         return (
@@ -206,8 +235,10 @@ var ChatApp = React.createClass({
                             loggedIn={this.state.loggedIn}
                             channels={this.state.channels}
                             currChannel={this.state.currChannel}
+                            ownChannel={this.state.ownChannel}
                             onChannelJoin={this.onChannelJoin}
                             onChannelCreate={this.onChannelCreate}
+                            onChannelDelete={this.onChannelDelete}
                         />
                     </div>
                     <div className="col-md-4 col-md-pull-8">

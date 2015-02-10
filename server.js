@@ -160,6 +160,32 @@ socket.on('connection', function(client) {
             logger.debug(users[client.id].name + ' failed to create channel: ' + errorMessage);
         }
     });
+
+    client.on('channel:delete', function(name, currChannel, callback) {
+        var clientIds = socket.sockets.adapter.rooms[name],
+            cli,
+            newMessage,
+            newChannel = (name === currChannel ? channels.default.name : currChannel);
+
+        for (var id in clientIds) { /* jshint ignore: line */
+            cli = socket.sockets.adapter.nsp.connected[id];
+            cli.leave(name);
+            logger.debug(users[cli.id].name + ' left channel ' + name);
+
+            cli.join(channels.default.name);
+            users[cli.id].channel = 'default';
+            newMessage = new Message(users[cli.id].name + ' has joined the channel');
+            cli.broadcast.to(channels.default.name).emit('message:new', newMessage);
+            logger.debug(users[cli.id].name + ' joined channel ' + channels.default.name);
+
+            cli.emit('channel:change', channels.default.name);
+        }
+        utils.deleteChannel(channels, client.id);
+        newMessage = new Message(users[client.id].name + ' deleted channel ' + name);
+        socket.sockets.emit('message:new', newMessage);
+        socket.sockets.emit('update-channels', utils.getChannelsArray(channels));
+        callback(null, newChannel);
+    });
     
     client.on('message:send', function(message) {
         var channelName = channels[users[client.id].channel].name,

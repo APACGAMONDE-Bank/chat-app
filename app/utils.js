@@ -60,5 +60,12 @@ module.exports = {
         logger.debug('Deleting user: ' + JSON.stringify(users[clientId]));
         delete users[clientId];
         logger.debug('Users: ' + JSON.stringify(users));
+    },
+
+    deleteChannel: function(channels, key) {
+        logger.debug('Deleting channel: ' + JSON.stringify(channels[key]));
+        delete channels[key];
+        logger.debug('Channels: ' + JSON.stringify(channels));
     }
+
 };
