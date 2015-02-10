@@ -57,7 +57,8 @@ module.exports = {
     },
 
     deleteUser: function(users, clientId) {
-        logger.debug('Deleting user ' + JSON.stringify(users[clientId]));
+        logger.debug('Deleting user: ' + JSON.stringify(users[clientId]));
         delete users[clientId];
+        logger.debug('Users: ' + JSON.stringify(users));
     }
 };

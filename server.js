@@ -27,8 +27,7 @@ var socket = io(server);
 // Globals
 var users = {};
 var channels = {
-    default: new Channel('Home', 'The default channel'),
-    test: new Channel('Test', 'This is a test channel')
+    default: new Channel('Home', 'The default channel')
 };
 
 // TODO:
@@ -52,6 +51,7 @@ server.listen(config.PORT, function() {
 
 // socket.io communication
 socket.on('connection', function(client) {
+    logger.debug('Client connection: ' + client.id);
 
     client.emit('update-users', utils.getUsersArray(users));
     client.emit('update-channels', utils.getChannelsArray(channels));
@@ -71,8 +71,8 @@ socket.on('connection', function(client) {
             newMessage = new Message(username + ' has joined chat');
             client.broadcast.to(channels.default.name).emit('message:new', newMessage);
 
-            callback();
             socket.sockets.emit('update-users', utils.getUsersArray(users));
+            callback();
             logger.debug(username + ' successfully logged in');
         } else {
             callback(errorMessage);
@@ -93,8 +93,8 @@ socket.on('connection', function(client) {
             newMessage = new Message(oldUsername + ' has changed their name to ' + newUsername);
             client.broadcast.emit('message:new', newMessage);
 
-            callback();
             socket.sockets.emit('update-users', utils.getUsersArray(users));
+            callback();
             logger.debug(oldUsername + ' successfully changed their name to ' + newUsername);
         } else {
             callback(errorMessage);
@@ -151,10 +151,10 @@ socket.on('connection', function(client) {
             channels[client.id] = new Channel(name, description);
             logger.debug(users[client.id].name + ' created channel: ' + JSON.stringify(channels[client.id]));
 
-            callback();
             newMessage = new Message(users[client.id].name + ' created new channel ' + name);
             socket.sockets.emit('message:new', newMessage);
             socket.sockets.emit('update-channels', utils.getChannelsArray(channels));
+            callback();
         } else {
             callback(errorMessage);
             logger.debug(users[client.id].name + ' failed to create channel: ' + errorMessage);
