@@ -350,4 +350,63 @@ describe('Chat server', function() {
         });
     });
 
+    describe('on channel join', function() {
+        var newChannelName = 'New Channel',
+            newChannelDescription = 'This is a new channel';
+
+        beforeEach(function(done) {
+            client1.emit('user:login', username1, function() {
+                client2.emit('user:login', username2, function() {
+                    client1.emit('channel:create', newChannelName, newChannelDescription, function() {
+                        resetSpies();
+                        done();
+                    })
+                })
+            })
+        });
+
+        afterEach(function(done) {
+            client1.emit('channel:delete', newChannelName, 'Home', function() {
+                client1.emit('user:logout', function() {
+                    client2.emit('user:logout', function() {
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('should notify users in old channel', function(done) {
+            var message;
+            function completeTest() {
+                spyMessageNew1.callCount.should.equal(1);
+                message = spyMessageNew1.firstCall.args[0];
+                message.should.have.property('text', username2 + ' has left the channel');
+                message.should.have.property('username', null);
+                message.time.should.be.ok();
+                done();
+            }
+            client2.emit('channel:join', newChannelName, function() {
+                setTimeout(completeTest, DELAY);
+            });
+        });
+
+        it('should notify users in new channel', function(done) {
+            var message;
+            function completeTest() {
+                spyMessageNew1.callCount.should.equal(1);
+                message = spyMessageNew1.firstCall.args[0];
+                message.should.have.property('text', username2 + ' has joined the channel');
+                message.should.have.property('username', null);
+                message.time.should.be.ok();
+                done();
+            }
+            client1.emit('channel:join', newChannelName, function() {
+                client2.emit('channel:join', newChannelName, function() {
+                    setTimeout(completeTest, DELAY);
+                });
+            });
+        });
+
+    });
+
 });
