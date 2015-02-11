@@ -232,7 +232,32 @@ io.on('connection', function(socket) {
     
     socket.on('disconnect', function() {
         if (users[socket.id] !== undefined) {
-            var newMessage = new Message(users[socket.id].name + ' has left chat');
+            var newMessage;
+
+            if (channels.hasOwnProperty(socket.id)) {
+                var channelName = channels[socket.id].name,
+                    socketIds = io.sockets.adapter.rooms,
+                    client;
+                for (var socketId in socketIds) { /* jshint ignore: line */
+                    client = io.sockets.adapter.nsp.connected[socketId];
+                    client.leave(channelName);
+                    logger.debug(users[client.id].name + ' left channel ' + channelName);
+
+                    client.join(channels.default.name);
+                    users[client.id].channel = 'default';
+                    newMessage = new Message(users[client.id].name + ' has joined the channel');
+                    client.broadcast.to(channels.default.name).emit('message:new', newMessage);
+                    logger.debug(users[client.id].name + ' joined channel ' + channels.default.name);
+
+                    client.emit('channel:change', channels.default.name);
+                }
+                utils.deleteChannel(channels, socket.id);
+                newMessage = new Message(users[socket.id].name + ' deleted channel ' + channelName);
+                io.sockets.emit('message:new', newMessage);
+                io.sockets.emit('update-channels', utils.getChannelsArray(channels));
+            }
+
+            newMessage = new Message(users[socket.id].name + ' has left chat');
             io.sockets.emit('message:new', newMessage);
 
             logger.debug(users[socket.id].name + ' disconnected');
