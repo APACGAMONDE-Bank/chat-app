@@ -406,7 +406,63 @@ describe('Chat server', function() {
                 });
             });
         });
+    });
 
+    describe('on channel delete', function() {
+        var newChannelName = 'New Channel',
+            newChannelDescription = 'This is a new channel';
+
+        beforeEach(function(done) {
+            client1.emit('user:login', username1, function() {
+                client1.emit('channel:create', newChannelName, newChannelDescription, function() {
+                    resetSpies();
+                    done();
+                });
+            });
+        });
+
+        afterEach(function(done) {
+            client1.emit('user:logout', function() {
+                done();
+            });
+        });
+
+        it('should notify all users', function(done) {
+            var message;
+            client1.emit('channel:delete', newChannelName, 'Home', function() {
+                spyMessageNew1.callCount.should.equal(1);
+                message = spyMessageNew1.firstCall.args[0];
+                message.should.have.property('text', username1 + ' deleted channel ' + newChannelName);
+                message.should.have.property('username', null);
+                message.time.should.be.ok();
+                done();
+            });
+        });
+
+        it('should emit updated channels list', function(done) {
+            var channels;
+            client1.emit('channel:delete', newChannelName, 'Home', function() {
+                spyUpdateChannels1.callCount.should.equal(1);
+                channels = spyUpdateChannels1.firstCall.args[0];
+                channels.should.have.length(1);
+                channels[0].should.deep.equal({
+                    name: 'Home',
+                    description: 'The default channel',
+                    usersTyping: []
+                });
+                done();
+            });
+        });
+
+        it('should move users on the channel to the default channel', function(done) {
+            client1.emit('channel:join', newChannelName, function() {
+                client1.emit('channel:delete', newChannelName, newChannelName, function(error, newChannel) {
+                    should.not.exist(error);
+                    newChannel.should.be.equal('Home');
+                    done();
+                });
+            });
+        });
     });
 
 });
