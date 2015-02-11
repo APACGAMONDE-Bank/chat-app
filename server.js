@@ -32,9 +32,7 @@ var channels = {
 
 // TODO:
 // Add avatars (Gravatar?)
-// Add {user} is typing functionality for multiple users
 // Add private messaging
-// Add multiple chat rooms
 // Better handle page refreshes and reconnections
 // Set up mongoDB
 
@@ -82,9 +80,16 @@ io.on('connection', function(socket) {
     });
 
     socket.on('user:update', function(newUsername, callback) {
-        var oldUsername = users[socket.id].name,
-            errorMessage = utils.validateUsername(users, socket.id, newUsername),
-            newMessage;
+        var errorMessage = utils.validateUsername(users, socket.id, newUsername),
+            newMessage,
+            oldUsername;
+
+        try {
+            oldUsername = users[socket.id].name;
+        } catch(e) {
+            errorMessage = config.ERROR_MSG;
+            logger.error('user:update ' + e.message);
+        }
 
         if (!errorMessage) {
             users[socket.id].name = newUsername;
@@ -104,8 +109,15 @@ io.on('connection', function(socket) {
     });
     
     socket.on('user:logout', function(callback) {
-        var channelName = channels[users[socket.id].channel].name,
+        var channelName,
             newMessage;
+
+        try {
+            channelName = channels[users[socket.id].channel].name;
+        } catch(e) {
+            logger.error('user:logout ' + e.message);
+            callback(config.ERROR_MSG);
+        }
 
         socket.leave(channelName);
         logger.debug(users[socket.id].name + ' left channel ' + channelName);
@@ -121,22 +133,29 @@ io.on('connection', function(socket) {
         callback();
     });
 
-    socket.on('channel:join', function(channel, callback) {
-        var oldChannelName = channels[users[socket.id].channel].name,
+    socket.on('channel:join', function(channelName, callback) {
+        var oldChannelName,
             newMessage;
+
+        try {
+            oldChannelName = channels[users[socket.id].channel].name;
+        } catch(e) {
+            logger.error('channel:join ' + e.message);
+            callback(config.ERROR_MSG);
+        }
 
         socket.leave(oldChannelName);
         newMessage = new Message(users[socket.id].name + ' has left the channel');
         socket.broadcast.to(oldChannelName).emit('message:new', newMessage);
         logger.debug(users[socket.id].name + ' left channel ' + oldChannelName);
 
-        socket.join(channel);
+        socket.join(channelName);
         newMessage = new Message(users[socket.id].name + ' has joined the channel');
-        socket.broadcast.to(channel).emit('message:new', newMessage);
-        logger.debug(users[socket.id].name + ' joined channel ' + channel);
+        socket.broadcast.to(channelName).emit('message:new', newMessage);
+        logger.debug(users[socket.id].name + ' joined channel ' + channelName);
 
         for (var key in channels) {
-            if (channels.hasOwnProperty(key) && channels[key].name === channel) {
+            if (channels.hasOwnProperty(key) && channels[key].name === channelName) {
                 users[socket.id].joinChannel(key);
                 break;
             }

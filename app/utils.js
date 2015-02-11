@@ -18,17 +18,21 @@ module.exports = {
     },
 
     validateUsername: function(users, clientId, username) {
-        var error = '',
+        var error = null,
             count = 0;
-        for (var id in users) {
-            if (users.hasOwnProperty(id)) {
-                count++;
-                if (users[id] && users[id].name === username && clientId !== id) {
-                    error = 'Username `' + username + '` already in use';
-                    break;
-                } else if (count > config.MAX_USERS) {
-                    error = 'Too many users, try again later';
-                    break;
+        if (!username) {
+            error = 'Please provide a valid username';
+        } else {
+            for (var id in users) {
+                if (users.hasOwnProperty(id)) {
+                    count++;
+                    if (users[id] && users[id].name === username && clientId !== id) {
+                        error = 'Username `' + username + '` already in use';
+                        break;
+                    } else if (count > config.MAX_USERS) {
+                        error = 'Too many users, try again later';
+                        break;
+                    }
                 }
             }
         }
@@ -36,20 +40,24 @@ module.exports = {
     },
 
     validateChannel: function(channels, clientId, channelName) {
-        var error = '',
+        var error = null,
             count = 0;
-        for (var key in channels) {
-            if (channels.hasOwnProperty(key)) {
-                count++;
-                if (key === clientId) {
-                    error = 'You have already created a channel';
-                    break;
-                } else if (channels[key] && channels[key].name === channelName) {
-                    error = 'A channel with that name already exists';
-                    break;
-                } else if (count > config.MAX_CHANNELS) {
-                    error = 'Maximum number of channels exceeded, try again later';
-                    break;
+        if (!channelName) {
+            error = 'Please provide a valid channel name';
+        } else {
+            for (var key in channels) {
+                if (channels.hasOwnProperty(key)) {
+                    count++;
+                    if (key === clientId) {
+                        error = 'You have already created a channel';
+                        break;
+                    } else if (channels[key] && channels[key].name === channelName) {
+                        error = 'A channel with that name already exists';
+                        break;
+                    } else if (count > config.MAX_CHANNELS) {
+                        error = 'Too many channels, try again later';
+                        break;
+                    }
                 }
             }
         }
@@ -57,14 +65,22 @@ module.exports = {
     },
 
     deleteUser: function(users, clientId) {
-        logger.debug('Deleting user: ' + JSON.stringify(users[clientId]));
-        delete users[clientId];
+        if (users.hasOwnProperty(clientId)) {
+            logger.debug('Deleting user: ' + JSON.stringify(users[clientId]));
+            delete users[clientId];
+        } else {
+            logger.error('Client id `' + clientId + '` not in users');
+        }
         logger.debug('Users: ' + JSON.stringify(users));
     },
 
     deleteChannel: function(channels, key) {
-        logger.debug('Deleting channel: ' + JSON.stringify(channels[key]));
-        delete channels[key];
+        if (channels.hasOwnProperty(key)) {
+            logger.debug('Deleting channel: ' + JSON.stringify(channels[key]));
+            delete channels[key];
+        } else {
+            logger.error('Channel key `' + key + '` not in channels');
+        }
         logger.debug('Channels: ' + JSON.stringify(channels));
     }
 

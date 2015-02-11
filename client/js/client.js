@@ -105,6 +105,8 @@ var ChatApp = React.createClass({
         client.emit('channel:join', channelName, function(error) {
             if (!error) {
                 that.setState({currChannel: channelName});
+            } else {
+                that.setState({alert: {error: true, message: error}});
             }
         });
     },
