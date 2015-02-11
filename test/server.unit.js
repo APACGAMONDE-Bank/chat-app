@@ -1,6 +1,5 @@
 'use strict';
 
-var mocha = require('mocha');
 var should = require('chai').should();
 var sinon = require('sinon');
 var io = require('socket.io-client');
@@ -360,9 +359,9 @@ describe('Chat server', function() {
                     client1.emit('channel:create', newChannelName, newChannelDescription, function() {
                         resetSpies();
                         done();
-                    })
-                })
-            })
+                    });
+                });
+            });
         });
 
         afterEach(function(done) {

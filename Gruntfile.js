@@ -123,7 +123,8 @@ module.exports = function(grunt) {
                 ignores: ['client/js/client.js']
             },
             server: ['Gruntfile.js', 'server.js', 'app/**/*.js'],
-            client: ['client/js/**/*.js']
+            client: ['client/js/**/*.js'],
+            tests: ['test/**/*.js']
         },
 
         watch: {
