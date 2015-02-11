@@ -72,8 +72,9 @@ io.on('connection', function(socket) {
             socket.broadcast.to(channels.default.name).emit('message:new', newMessage);
 
             io.sockets.emit('update-users', utils.getUsersArray(users));
-            callback();
             logger.debug(username + ' successfully logged in');
+            logger.debug('Users: ' + JSON.stringify(users));
+            callback();
         } else {
             callback(errorMessage);
             logger.debug(username + ' failed to login: ' + errorMessage);
@@ -94,8 +95,8 @@ io.on('connection', function(socket) {
             socket.broadcast.emit('message:new', newMessage);
 
             io.sockets.emit('update-users', utils.getUsersArray(users));
-            callback();
             logger.debug(oldUsername + ' successfully changed their name to ' + newUsername);
+            callback();
         } else {
             callback(errorMessage);
             logger.debug(newUsername + ' failed to update: ' + errorMessage);
@@ -154,6 +155,7 @@ io.on('connection', function(socket) {
             newMessage = new Message(users[socket.id].name + ' created new channel ' + name);
             io.sockets.emit('message:new', newMessage);
             io.sockets.emit('update-channels', utils.getChannelsArray(channels));
+            logger.debug('Channels: ' + JSON.stringify(channels));
             callback();
         } else {
             callback(errorMessage);

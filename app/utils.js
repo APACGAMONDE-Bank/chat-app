@@ -24,7 +24,7 @@ module.exports = {
             if (users.hasOwnProperty(id)) {
                 count++;
                 if (users[id] && users[id].name === username && clientId !== id) {
-                    error = 'Username already in use';
+                    error = 'Username `' + username + '` already in use';
                     break;
                 } else if (count > config.MAX_USERS) {
                     error = 'Too many users, try again later';
