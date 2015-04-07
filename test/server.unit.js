@@ -15,7 +15,8 @@ var options = {
 var DELAY = 10; // ms
 
 describe('Chat server', function() {
-    var client1,
+    var server,
+        client1,
         client2,
         username1 = 'User 1',
         username2 = 'User 2',
@@ -34,6 +35,11 @@ describe('Chat server', function() {
         spyUpdateUsers2.reset();
         spyUpdateChannels2.reset();
     }
+
+    before(function(done) {
+        server = require('../server');
+        done();
+    });
 
     beforeEach(function(done) {
         client1 = io.connect(socketURL, options);
@@ -59,6 +65,11 @@ describe('Chat server', function() {
             done();
         });
         client1.disconnect();
+    });
+
+    after(function(done) {
+        server.close();
+        done();
     });
 
     describe('on client connection', function() {
@@ -305,8 +316,9 @@ describe('Chat server', function() {
             var message1,
                 message2;
             function completeTest() {
-                spyMessageNew1.callCount.should.equal(1);
-                message1 = spyMessageNew1.firstCall.args[0];
+                // first call is user 2 joining
+                spyMessageNew1.callCount.should.equal(2);
+                message1 = spyMessageNew1.secondCall.args[0];
                 message1.should.have.property('text', username1 + ' created new channel ' + newChannelName);
                 message1.should.have.property('username', null);
                 message1.time.should.be.ok();

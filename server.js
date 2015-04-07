@@ -267,3 +267,5 @@ io.on('connection', function(socket) {
     });
 
 });
+
+module.exports = server;
