@@ -168,6 +168,13 @@ module.exports = function(grunt) {
                     logConcurrentOutput: true
                 }
             }
+        },
+
+        mochaTest: {
+            options: {
+                reporter: 'spec'
+            },
+            src: ['test/*.js']
         }
 
     });
@@ -182,6 +189,8 @@ module.exports = function(grunt) {
 
     grunt.registerTask('build:dev', ['jshint', 'clean:dev', 'browserify:client', 'concat', 'copy:dev']);
     grunt.registerTask('build:prod', ['clean:prod', 'concat', 'uglify', 'cssmin', 'copy:prod']);
+
+    grunt.registerTask('test', ['jshint', 'mochaTest']);
 
     grunt.registerTask('server', ['build:dev', 'concurrent:dev']);
 };
